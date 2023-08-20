@@ -6,7 +6,6 @@ Made for self teaching.
 
 ## How to use
 
-- Create a dir called "images"
-- Put your png's and jpg's in there.
+- Put the executable in a dir with png's and jpg's
 - Run the app
-- Ta-daa
+- Ta-daa 🪄

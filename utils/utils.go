@@ -1,5 +1,7 @@
 package utils
 
+import "os"
+
 type Callback[Input any, Output any] func(Input) Output
 type ReduceCallback[Accumulator any, Input any] func(Accumulator, Input) Accumulator
 
@@ -33,4 +35,22 @@ func SliceReduce[Input any, Output any](input []Input, reducerFn ReduceCallback[
 	}
 
 	return result
+}
+
+func FindFiles(path string) ([]string, error) {
+	entries, err := os.ReadDir(path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	files := SliceFilter(entries, func(file os.DirEntry) bool {
+		return !file.IsDir()
+	})
+
+	fileNames := SliceMap(files, func(file os.DirEntry) string {
+		return path + file.Name()
+	})
+
+	return fileNames, nil
 }
