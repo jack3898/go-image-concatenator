@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"image"
 	"os"
+
+	"github.com/disintegration/imaging"
 )
 
 // Returns a slice of images from the given paths
@@ -24,7 +26,7 @@ func FindImages(paths []string) []image.Image {
 		image, _, imageErr := image.Decode(file)
 
 		if imageErr != nil {
-			fmt.Println("Could not decode image", file)
+			fmt.Println("Could not decode", file.Name(), "skipping")
 
 			continue
 		}
@@ -70,4 +72,9 @@ func GetMaxXByImages(images []image.Image) int {
 
 		return acc
 	})
+}
+
+// Scales an image by the given width, maintains aspect ratio
+func ScaleImageByWidth(img image.Image, width int) image.Image {
+	return imaging.Resize(img, width, 0, imaging.Lanczos)
 }

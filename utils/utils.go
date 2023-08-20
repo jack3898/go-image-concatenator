@@ -2,14 +2,14 @@ package utils
 
 import "os"
 
-type Callback[Input any, Output any] func(Input) Output
+type Callback[Input any, Output any] func(Input, int) Output
 type ReduceCallback[Accumulator any, Input any] func(Accumulator, Input) Accumulator
 
 func SliceMap[Input any, Output any](input []Input, callback Callback[Input, Output]) []Output {
 	var newSlice []Output
 
-	for _, val := range input {
-		newSlice = append(newSlice, callback(val))
+	for index, val := range input {
+		newSlice = append(newSlice, callback(val, index))
 	}
 
 	return newSlice
@@ -18,8 +18,8 @@ func SliceMap[Input any, Output any](input []Input, callback Callback[Input, Out
 func SliceFilter[Input any](input []Input, callback Callback[Input, bool]) []Input {
 	var newSlice []Input
 
-	for _, val := range input {
-		if callback(val) {
+	for index, val := range input {
+		if callback(val, index) {
 			newSlice = append(newSlice, val)
 		}
 	}
@@ -44,11 +44,11 @@ func FindFiles(path string) ([]string, error) {
 		return nil, err
 	}
 
-	files := SliceFilter(entries, func(file os.DirEntry) bool {
+	files := SliceFilter(entries, func(file os.DirEntry, _ int) bool {
 		return !file.IsDir()
 	})
 
-	fileNames := SliceMap(files, func(file os.DirEntry) string {
+	fileNames := SliceMap(files, func(file os.DirEntry, _ int) string {
 		return path + file.Name()
 	})
 

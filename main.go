@@ -15,37 +15,45 @@ func main() {
 	fileNames, err := utils.FindFiles(dir)
 
 	if err != nil {
-		fmt.Println("Could not find files")
-		panic(err)
+		panic("Could not find files")
 	}
 
 	images := utils.FindImages(fileNames)
+	outImgWidth := utils.GetMaxXByImages(images)
 
 	fmt.Println("Found", len(images), "images.")
 
-	outImgHeight := utils.GetSumYOfImages(images)
-	outImgWidth := utils.GetMaxXByImages(images)
+	resizedImages := utils.SliceMap(images, func(image image.Image, index int) image.Image {
+		if image.Bounds().Max.X == outImgWidth {
+			fmt.Println("Image", index+1, "is already the correct size")
+			return image
+		}
 
-	newImage := image.NewRGBA(image.Rect(0, 0, outImgWidth, outImgHeight))
+		fmt.Println("Resizing image", index+1, "of", len(images))
+		return utils.ScaleImageByWidth(image, outImgWidth)
+	})
 
-	utils.AppendImages(images, newImage)
+	// Calculate the height of the output image using the newly resized images
+	outImgHeight := utils.GetSumYOfImages(resizedImages)
+
+	outImage := image.NewRGBA(image.Rect(0, 0, outImgWidth, outImgHeight))
+
+	utils.AppendImages(resizedImages, outImage)
 
 	out, err := os.Create("out.png")
 
 	if err != nil {
-		fmt.Println("Could not create file out.png")
-		panic(err)
+		panic("Could not create file out.png")
 	}
 
 	defer out.Close()
 
-	fmt.Println("Encoding image...")
+	fmt.Println("Encoding image")
 
-	err = png.Encode(out, newImage)
+	err = png.Encode(out, outImage)
 
 	if err != nil {
-		fmt.Println("Could not encode image")
-		panic(err)
+		panic("Could not encode image")
 	}
 
 	fmt.Println("Done!")
