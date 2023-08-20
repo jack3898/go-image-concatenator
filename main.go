@@ -6,6 +6,7 @@ import (
 	"image-concatenator/utils"
 	_ "image/jpeg"
 	png "image/png"
+	"math"
 	"os"
 	"regexp"
 	"strconv"
@@ -14,9 +15,9 @@ import (
 const dir = "./"
 
 func main() {
-	fileNames, err := utils.FindFiles(dir)
+	fileNames, pngErr := utils.FindFiles(dir)
 
-	if err != nil {
+	if pngErr != nil {
 		panic("Could not find files")
 	}
 
@@ -35,9 +36,19 @@ func main() {
 	})
 
 	images := utils.FindImages(sortedFileNames)
-	outImgWidth := utils.GetMaxXByImages(images)
+	imagesSortedByX := utils.SliceSort(images, func(imageA image.Image, imageB image.Image) int {
+		return imageA.Bounds().Max.X - imageB.Bounds().Max.X
+	})
+
+	medianWidth := imagesSortedByX[len(imagesSortedByX)/2].Bounds().Max.X
+	outImgWidth := int(math.Min(float64(medianWidth), 2000))
 
 	fmt.Println("Found", len(images), "images.")
+	fmt.Println("Median size of image collection is", medianWidth, "px.")
+
+	if outImgWidth == 2000 {
+		fmt.Println("NOTE: The output image is now clamped to a width of 2000px, to prevent an excessive file size.")
+	}
 
 	resizedImages := utils.SliceMap(images, func(image image.Image, index int) image.Image {
 		if image.Bounds().Max.X == outImgWidth {
@@ -56,9 +67,9 @@ func main() {
 
 	utils.AppendImages(resizedImages, outImage)
 
-	out, err := os.Create("out.png")
+	out, pngErr := os.Create("out.png")
 
-	if err != nil {
+	if pngErr != nil {
 		panic("Could not create file out.png")
 	}
 
@@ -66,10 +77,10 @@ func main() {
 
 	fmt.Println("Encoding image")
 
-	err = png.Encode(out, outImage)
+	pngErr = png.Encode(out, outImage)
 
-	if err != nil {
-		panic("Could not encode image")
+	if pngErr != nil {
+		panic(pngErr)
 	}
 
 	fmt.Println("Done!")
