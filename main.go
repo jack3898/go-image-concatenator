@@ -7,6 +7,8 @@ import (
 	_ "image/jpeg"
 	png "image/png"
 	"os"
+	"regexp"
+	"strconv"
 )
 
 const dir = "./"
@@ -18,7 +20,21 @@ func main() {
 		panic("Could not find files")
 	}
 
-	images := utils.FindImages(fileNames)
+	sortedFileNames := utils.SliceSort(fileNames, func(a, b string) int {
+		re := regexp.MustCompile("[0-9]+")
+
+		// convert file name to int
+		aInt, aErr := strconv.Atoi(utils.SliceJoin(re.FindAllString(a, -1)))
+		bInt, bErr := strconv.Atoi(utils.SliceJoin(re.FindAllString(b, -1)))
+
+		if aErr != nil || bErr != nil {
+			return 0
+		}
+
+		return aInt - bInt
+	})
+
+	images := utils.FindImages(sortedFileNames)
 	outImgWidth := utils.GetMaxXByImages(images)
 
 	fmt.Println("Found", len(images), "images.")
